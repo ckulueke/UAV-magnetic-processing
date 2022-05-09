@@ -1,6 +1,15 @@
+% This script is used to reproduce the plots shown in the article. The
+% processing steps performed on the model data are identical to the
+% processing steps of the survey data.
+%
+% In the article, only a part of the survey is shown. To plot the complete
+% survey, the marked lines need to be commented out in each plot.
+
 %% load and prepare survey data
+% The files are located in "PROCESSED DATA MATLAB"
 load('survey_final.mat');
-% extract data from struct
+
+% extract data from struct (cf. "FINAL MATLAB STRUCTURE README.txt")
 mag=survey.mag_final;
 
 %% load and prepare model data
@@ -17,11 +26,12 @@ mag_sim.gradBT=(mag_sim.BT1-mag_sim.BT2)./0.5...
 .*sign(atan2d(mag_sim.B1(:,1),mag_sim.B1(:,2)));
 
 %% interpolate model data
-load('TACHYMETER\Tachy.mat') % load anomaly positions
 disp('Starting interpolation...')
+
 % Interpolate gradients to regular grid. A moving median is subtracted from
 % the data to account for large-scale and regional spatial variations
-% (substitution for tie-line corrections)
+% (substitution for tie-line corrections, wavelengths approximately equal
+% to profile length)
 interp.gradT_sim=scatteredInterpolant([mag_sim.E_Grad mag_sim.N_Grad],...
 mag_sim.gradBT-movmedian(mag_sim.gradBT,1000),'natural','none');
 interp.gradX_sim=scatteredInterpolant([mag_sim.E_Grad mag_sim.N_Grad],...
@@ -43,9 +53,10 @@ disp('Gradient data interpolated')
 
 % Interpolate TMI and component data to regular grid. A moving median is 
 % subtracted from the data to account for large-scale and regional spatial 
-% variations (substitution for tie-line corrections)
+% variations (substitution for tie-line corrections, wavelengths
+% approximately equal to profile length)
 
-% Convert table to matrix. FOR TMI and component data, there is no
+% Convert table to matrix. For TMI and component data, there is no
 % distinction between the sensors, therefore the data are concatenated
 % magdata matrix columns: E, N, BE, BN, BV, BT
 magdata=[mag_sim.E1 mag_sim.N1 mag_sim.B1_Reor-movmedian(sgolayfilt(mag_sim.B1_Reor,3,51),1000,'omitnan') mag_sim.BT1-movmedian(sgolayfilt(mag_sim.BT1,3,51),1000,'omitnan');...

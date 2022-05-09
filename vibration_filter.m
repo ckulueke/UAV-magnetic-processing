@@ -1,33 +1,40 @@
+% Script for reducing vibration-related (high-frequency) noise. The
+% vibration is expressed as a relative rotation between the two sensors. 
+% Because the reorientation is performed identically on both sensors, this 
+% filter can be used on reoriented and non-reoriented data. If performed on
+% non-reoriented data, exchange lines 20/21 and 33/34 
 %% load data
-% Script for reducing vibration-related (high-frequency) noise. Can be 
-% performed on reoriented and non-reoriented data. If performed on
-% non-reoriented data, exchange lines 16/17 and 27/28 
-
+% The files are located in "PROCESSED DATA MATLAB"
 load("survey_final.mat",'survey') % load data from matlab workscape file
 mag=survey.mag_final; % extracting magnetic data table from struct
+
 %% Preallocation
 % Preallocation of Roll, Yaw and Pitch vectors denoting the relative angles
-% between the two sensors
+% between the two sensors.
 Roll=zeros(height(mag),1);
 Yaw=Roll;
 Pitch=Roll;
+
 %% Calculate relative angles
 for i=1:height(mag)
 	[Roll(i),Yaw(i),Pitch(i)]=RYP(RotMatVecMin(mag.B2_Reor(i,:),mag.B1_Reor(i,:))); % select this line when performing the correction on reoriented data
 % 	[Roll(i),Yaw(i),Pitch(i)]=RYP(RotMatVecMin(mag.B2_Reor(i,:),mag.B1(i,:))); % select this line when performing the correction on non-reoriented data
 end
+
 %% highpass filter
 % angles are high-pass filtered by removing low-pass filtered
 % angles from calculated angles 
 Roll=Roll-sgolayfilt(Roll,3,51);
 Yaw=Yaw-sgolayfilt(Yaw,3,51);
 Pitch=Pitch-sgolayfilt(Pitch,3,51);
+
 %% correction of Sensor 2 reoriented data
 for i=1:height(mag)
 	mag.B2_Reor_korr(i,:)=(RotMatRYP(Roll(i),Yaw(i),Pitch(i))*mag.B2_Reor(i,:)')'; % select this line when performing the correction on reoriented data
 % 	mag.B2_korr(i,:)=(RotMatRYP(Roll(i),Yaw(i),Pitch(i))*mag.B2(i,:)')'; % select this line when performing the correction on non-reoriented data
 end
 % END OF PROGRAM
+
 %% functions
 function [Roll,Yaw,Pitch]=RYP(A)
 	% Calculate Roll, Yaw and Pitch angles from rotation matrix A
